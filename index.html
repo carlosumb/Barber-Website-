@@ -28,7 +28,7 @@
       <h2>Welcome to my Los's Shop</h2>
       <p>Please note the following:</p>
       <p>There is a 10 dollar deposit fee</p>
-      <p>Please leave the haircut you'd like in the contact information, You may add the specfications of your hair so I can prepare</p>
+      <p>Please leave the haircut you'd like in the contact information, You may add the specifications of your hair so I can prepare</p>
       <p>I am flexible so if my times do not work for you, we can work something out</p>
       <p>Please do not bring extra people, a parent or guardian is fine</p>
     </section>
@@ -52,6 +52,31 @@
     <p>Last modified: <span id="lastModified"></span></p>
     <p>Marion St &#8226; Boston, MA 02128 &#8226; (617) 708-6330</p>
   </footer>
-  <script> document.getElementById("lastModified").textContent = document.lastModified; </script>
+
+  <!-- Existing lastModified script -->
+  <script> 
+    document.getElementById("lastModified").textContent = document.lastModified; 
+  </script>
+
+  <!-- Geolocation script -->
+  <script>
+    window.onload = function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            console.log("Latitude:", latitude);
+            console.log("Longitude:", longitude);
+          },
+          function(error) {
+            console.error("Error getting location:", error.message);
+          }
+        );
+      } else {
+        console.error("Geolocation is not supported by this browser.");
+      }
+    };
+  </script>
 </body>
 </html>
