@@ -60,23 +60,135 @@
 
   <!-- Geolocation script -->
   <script>
-    window.onload = function() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            console.log("Latitude:", latitude);
-            console.log("Longitude:", longitude);
-          },
-          function(error) {
-            console.error("Error getting location:", error.message);
-          }
-        );
+    
+// UMass Boston locations and radius 
+const locations = [
+  { name: "Healey Library", lat: 42.3146, lng: -71.0389, radius: 70 },
+  { name: "Wheatley Hall", lat: 42.3143, lng: -71.0398, radius: 70 },
+  { name: "McCormack Hall", lat: 42.3142, lng: -71.0393, radius: 70 },
+  { name: "ISC", lat: 42.3137, lng: -71.0382, radius: 80 },
+  { name: "Campus Center", lat: 42.3149, lng: -71.0405, radius: 80 },
+  { name: "University Hall", lat: 42.3133, lng: -71.0412, radius: 80 }
+];
+
+// redirect based on location they are in 
+const redirects = {
+  "Healey Library": "/resources/library.html",
+  "ISC": "/resources/isc.html",
+  "Wheatley Hall": "/resources/wheatley.html",
+  "McCormack Hall": "/resources/mccormack.html",
+  "Campus Center": "/resources/campus-center.html",
+  "University Hall": "/resources/university-hall.html"
+};
+
+// math from the goat for radius
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371e3;
+  const toRad = x => x * Math.PI / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// resrouce based on location 
+function getZone(lat, lng){
+  let closest = null;
+  let minDist = Infinity;
+
+  for(const loc of locations){
+    const dist = getDistance(lat, lng, loc.lat, loc.lng);
+
+    if(dist <= loc.radius && dist < minDist){
+      minDist = dist;
+      closest = loc.name;
+    }
+  }
+
+  return closest || "Unknown location";
+}
+
+// First thing that happens when a user joins 
+window.onload = function() {
+  if (!navigator.geolocation) {
+    document.getElementById("status").innerText =
+      "Geolocation is not supported by your browser.";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      console.log("Latitude:", lat);
+      console.log("Longitude:", lng);
+
+      const zone = getZone(lat, lng);
+
+      console.log("Detected Zone:", zone);
+
+      // errors 
+      if(zone === "Unknown location"){
+        document.getElementById("status").innerText =
+          "You're not in a recognized campus building.";
       } else {
-        console.error("Geolocation is not supported by this browser.");
+        document.getElementById("status").innerText =
+          "You are in: " + zone + " (redirecting...)";
       }
-    };
+
+      // Send to backend when we have it set 
+      fetch("/location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user: "Alice",
+          zone: zone,
+          latitude: lat,
+          longitude: lng,
+          time: new Date()
+        })
+      }).catch(err => console.log("Backend error:", err));
+
+      // Small delay before redirect (better UX)
+      setTimeout(() => {
+        if(redirects[zone]){
+          window.location.href = redirects[zone];
+        }
+      }, 1500);
+    },
+
+    function(error) {
+      console.error("Geolocation error:", error.message);
+
+      let message = "Error getting location.";
+
+      if(error.code === 1){
+        message = "Permission denied. Please allow location access.";
+      } else if(error.code === 2){
+        message = "Location unavailable.";
+      } else if(error.code === 3){
+        message = "Location request timed out.";
+      }
+
+      document.getElementById("status").innerText = message;
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+};
+
   </script>
 </body>
 </html>
