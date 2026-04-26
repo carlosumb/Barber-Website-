@@ -6,7 +6,108 @@
   <title>Barber Shop - Home</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+
+  <!-- ✅ Feedback styling (added) -->
+  <style>
+    #feedbackBtn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #111;
+      color: #fff;
+      border: none;
+      padding: 14px 22px;
+      font-size: 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    #feedbackBtn:hover {
+      background: #e63946;
+      transform: scale(1.08);
+    }
+
+    #feedbackOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #feedbackModal {
+      background: #fff;
+      padding: 25px;
+      width: 350px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-header button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #feedbackModal select,
+    #feedbackModal textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .modal-actions {
+      margin-top: 15px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-actions button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-actions button:last-child {
+      background: #111;
+      color: white;
+    }
+
+    .modal-actions button:last-child:hover {
+      background: #e63946;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
+
 <body>
   <header>
     <h1>
@@ -53,11 +154,11 @@
     <p>Marion St • Boston, MA 02128 • (617) 708-6330</p>
   </footer>
 
-  <!-- Floating feedback button -->
+  <!-- Feedback Button -->
   <button id="feedbackBtn" onclick="openFeedbackModal()">💬 Feedback</button>
 
-  <!-- Feedback modal -->
-  <div id="feedbackOverlay" style="display:none;">
+  <!-- Feedback Modal -->
+  <div id="feedbackOverlay">
     <div id="feedbackModal">
       <div class="modal-header">
         <h3>Send feedback</h3>
@@ -87,9 +188,7 @@
 
   <script>
     document.getElementById("lastModified").textContent = document.lastModified;
-  </script>
 
-  <script>
     function openFeedbackModal() {
       document.getElementById("feedbackOverlay").style.display = "flex";
     }
@@ -107,13 +206,9 @@
       const label = document.getElementById("feedbackLabel");
       const details = document.getElementById("feedbackDetails");
 
-      if (type === "bug") {
-        label.textContent = "Describe the bug:";
-      } else if (type === "room-change") {
-        label.textContent = "What changed? (service, price, availability, etc.)";
-      } else if (type === "general") {
-        label.textContent = "What's on your mind?";
-      }
+      if (type === "bug") label.textContent = "Describe the bug:";
+      else if (type === "room-change") label.textContent = "What changed?";
+      else label.textContent = "What's on your mind?";
 
       details.style.display = "block";
     }
@@ -136,72 +231,6 @@
     }
   </script>
 
-  <!-- Geolocation script (unchanged) -->
-  <script>
-    const locations = [
-      { name: "Healey Library", lat: 42.3146, lng: -71.0389, radius: 70 },
-      { name: "Wheatley Hall", lat: 42.3143, lng: -71.0398, radius: 70 },
-      { name: "McCormack Hall", lat: 42.3142, lng: -71.0393, radius: 70 },
-      { name: "ISC", lat: 42.3137, lng: -71.0382, radius: 80 },
-      { name: "Campus Center", lat: 42.3149, lng: -71.0405, radius: 80 },
-      { name: "University Hall", lat: 42.3133, lng: -71.0412, radius: 80 }
-    ];
-
-    const redirects = {
-      "Healey Library": "/resources/library.html",
-      "ISC": "/resources/isc.html",
-      "Wheatley Hall": "/resources/wheatley.html",
-      "McCormack Hall": "/resources/mccormack.html",
-      "Campus Center": "/resources/campus-center.html",
-      "University Hall": "/resources/university-hall.html"
-    };
-
-    function getDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3;
-      const toRad = x => x * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLng = toRad(lng2 - lng1);
-      const a =
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function getZone(lat, lng) {
-      let closest = null;
-      let minDist = Infinity;
-      for (const loc of locations) {
-        const dist = getDistance(lat, lng, loc.lat, loc.lng);
-        if (dist <= loc.radius && dist < minDist) {
-          minDist = dist;
-          closest = loc.name;
-        }
-      }
-      return closest || "Unknown location";
-    }
-
-    window.onload = function() {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(function(position) {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const zone = getZone(lat, lng);
-        fetch("/location", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user: "Alice",
-            zone: zone,
-            latitude: lat,
-            longitude: lng,
-            time: new Date()
-          })
-        });
-      });
-    };
-  </script>
-
 </body>
+</html>
 </html>
