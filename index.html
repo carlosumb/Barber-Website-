@@ -1,193 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barber Shop - Home</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-</head>
-<body>
-  <header>
-    <h1>
-      <a href="index.html">
-        <img src="images/barber_sign.avif" width="864" height="184" alt="Barber Shop Logo">
-      </a>
-    </h1>
-    <nav class="sitenavigation">
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="hours.html">Hours</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
+<button id="feedbackBtn" onclick="openFeedbackModal()">💬 Feedback</button>
 
-  <main>
-    <section>
-      <h2>Welcome to my Los's Shop</h2>
-      <p>Please note the following:</p>
-      <p>There is a 10 dollar deposit fee</p>
-      <p>Please leave the haircut you'd like in the contact information</p>
-      <p>I am flexible so if my times do not work for you, we can work something out</p>
-      <p>Please do not bring extra people, a parent or guardian is fine</p>
-    </section>
+<div id="feedbackOverlay" style="display:none;">
+  <div id="feedbackModal">
+    <div class="modal-header">
+      <h3>Send feedback</h3>
+      <button onclick="closeFeedbackModal()">×</button>
+    </div>
 
-    <section>
-      <h2>What I stand for</h2>
-      <p>You get what you ask for or your money back</p>
-    </section>
+    <label>What kind of feedback?</label>
+    <select id="feedbackType" onchange="showTextBox()">
+      <option value="" disabled selected>Select an option...</option>
+      <option value="bug">Bug report</option>
+      <option value="room-change">Room / service change</option>
+      <option value="general">General feedback</option>
+    </select>
 
-    <section>
-      <h2>My recommendation </h2>
-      <iframe width="560" height="315" 
-        src="https://www.youtube.com/embed/o5dAX7hI4pw?si=3SShoGOZugddulms"
-        allowfullscreen>
-      </iframe>
-    </section>
+    <!-- This stays hidden until they pick an option -->
+    <div id="feedbackDetails" style="display:none;">
+      <label id="feedbackLabel">Describe what happened:</label>
+      <textarea id="feedbackText" placeholder="Tell me more..."></textarea>
+      <div class="modal-actions">
+        <button onclick="closeFeedbackModal()">Cancel</button>
+        <button onclick="submitFeedback()">Send</button>
+      </div>
+    </div>
 
-    <!-- 🔥 FEEDBACK SECTION ADDED -->
-    <section>
-      <h2>Leave Feedback</h2>
+    <p id="feedbackSuccess" style="display:none;">Thanks for your feedback!</p>
+  </div>
+</div>
 
-      <input id="roomInput" placeholder="Enter Room / Service (e.g. haircut)">
-      <br><br>
+<script>
+  function openFeedbackModal() {
+    document.getElementById("feedbackOverlay").style.display = "flex";
+  }
 
-      <textarea id="feedbackText" placeholder="Write your feedback"></textarea>
-      <br><br>
+  function closeFeedbackModal() {
+    document.getElementById("feedbackOverlay").style.display = "none";
+    document.getElementById("feedbackSuccess").style.display = "none";
+    document.getElementById("feedbackDetails").style.display = "none";
+    document.getElementById("feedbackText").value = "";
+    document.getElementById("feedbackType").value = "";
+  }
 
-      <button onclick="submitFeedback()">Submit Feedback</button>
+  function showTextBox() {
+    const type = document.getElementById("feedbackType").value;
+    const label = document.getElementById("feedbackLabel");
+    const details = document.getElementById("feedbackDetails");
 
-      <h3>Feedback:</h3>
-      <div id="feedbackList"></div>
-    </section>
-
-  </main>
-
-  <footer>
-    <p>Last modified: <span id="lastModified"></span></p>
-    <p>Marion St • Boston, MA 02128 • (617) 708-6330</p>
-  </footer>
-
-  <script>
-    document.getElementById("lastModified").textContent = document.lastModified;
-  </script>
-
-  <!-- 🔥 FEEDBACK JAVASCRIPT ADDED -->
-  <script>
-    function submitFeedback() {
-      const room = document.getElementById("roomInput").value;
-      const text = document.getElementById("feedbackText").value;
-
-      fetch("http://localhost:8000/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          spaceId: room,
-          feedback: text
-        })
-      })
-      .then(() => loadFeedback(room));
+    // Change the label based on what they picked
+    if (type === "bug") {
+      label.textContent = "Describe the bug:";
+    } else if (type === "room-change") {
+      label.textContent = "What changed? (service, price, availability, etc.)";
+    } else if (type === "general") {
+      label.textContent = "What's on your mind?";
     }
 
-    function loadFeedback(room) {
-      fetch(`http://localhost:8000/feedback/${room}`)
-        .then(res => res.json())
-        .then(data => {
-          const list = document.getElementById("feedbackList");
-          list.innerHTML = "";
+    details.style.display = "block";
+  }
 
-          data.forEach(item => {
-            const p = document.createElement("p");
-            p.textContent = `[${item.spaceId}] ${item.feedback}`;
-            list.appendChild(p);
-          });
-        });
-    }
-  </script>
+  function submitFeedback() {
+    const type = document.getElementById("feedbackType").value;
+    const text = document.getElementById("feedbackText").value;
+    if (!text.trim()) return;
 
-  <!-- Geolocation script (UNCHANGED) -->
-  <script>
-    const locations = [
-      { name: "Healey Library", lat: 42.3146, lng: -71.0389, radius: 70 },
-      { name: "Wheatley Hall", lat: 42.3143, lng: -71.0398, radius: 70 },
-      { name: "McCormack Hall", lat: 42.3142, lng: -71.0393, radius: 70 },
-      { name: "ISC", lat: 42.3137, lng: -71.0382, radius: 80 },
-      { name: "Campus Center", lat: 42.3149, lng: -71.0405, radius: 80 },
-      { name: "University Hall", lat: 42.3133, lng: -71.0412, radius: 80 }
-    ];
-
-    const redirects = {
-      "Healey Library": "/resources/library.html",
-      "ISC": "/resources/isc.html",
-      "Wheatley Hall": "/resources/wheatley.html",
-      "McCormack Hall": "/resources/mccormack.html",
-      "Campus Center": "/resources/campus-center.html",
-      "University Hall": "/resources/university-hall.html"
-    };
-
-    function getDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3;
-      const toRad = x => x * Math.PI / 180;
-
-      const dLat = toRad(lat2 - lat1);
-      const dLng = toRad(lng2 - lng1);
-
-      const a =
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function getZone(lat, lng){
-      let closest = null;
-      let minDist = Infinity;
-
-      for(const loc of locations){
-        const dist = getDistance(lat, lng, loc.lat, loc.lng);
-
-        if(dist <= loc.radius && dist < minDist){
-          minDist = dist;
-          closest = loc.name;
-        }
-      }
-
-      return closest || "Unknown location";
-    }
-
-    window.onload = function() {
-      if (!navigator.geolocation) return;
-
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          const zone = getZone(lat, lng);
-
-          fetch("/location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user: "Alice",
-              zone: zone,
-              latitude: lat,
-              longitude: lng,
-              time: new Date()
-            })
-          });
-
-        }
-      );
-    };
-  </script>
-
-</body>
-</html>
+    fetch("http://localhost:8000/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spaceId: type, feedback: text })
+    })
+    .then(() => {
+      document.getElementById("feedbackDetails").style.display = "none";
+      document.getElementById("feedbackSuccess").style.display = "block";
+      setTimeout(closeFeedbackModal, 1800);
+    });
+  }
+</script>
